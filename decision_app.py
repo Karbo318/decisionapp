@@ -68,40 +68,21 @@ def create_rating_chart(feedback_data):
             st.warning("No rating data available for visualization")
             return
         
-        # Remove any empty ratings
-        feedback_data = feedback_data[feedback_data["Rating"].notna()]
-        
-        if feedback_data.empty:
-            st.warning("No valid ratings found")
-            return
-        
         # Define ratings in desired order (negative to positive)
-        ordered_ratings = ["Hell No", "No", "I Don't Care", "Sure", "Definitely"]
-        
-        # Convert Rating to categorical type with specified order
-        feedback_data['Rating'] = pd.Categorical(
-            feedback_data['Rating'], 
-            categories=ordered_ratings,
+        ordered_ratings = pd.CategoricalDtype(
+            categories=["Hell No", "No", "I Don't Care", "Sure", "Definitely"],
             ordered=True
         )
         
-        # Calculate value counts with ordered categories
-        counts = feedback_data['Rating'].value_counts()
+        # Convert to categorical and get value counts
+        counts = feedback_data["Rating"].astype(ordered_ratings).value_counts()
         
-        # Reindex to ensure all categories are present
-        counts = counts.reindex(ordered_ratings, fill_value=0)
-        
-        # Create DataFrame for chart
-        chart_data = pd.DataFrame({
-            'Count': counts
-        })
-        
-        # Plot the chart
-        st.bar_chart(chart_data)
+        # Create and display chart
+        st.bar_chart(counts)
         
     except Exception as e:
         st.error(f"Error creating chart: {str(e)}")
-        
+
 def main():
     st.set_page_config(page_title="Team Member Feedback", page_icon="📋")
     
