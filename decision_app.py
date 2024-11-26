@@ -2,38 +2,21 @@ import streamlit as st
 import pandas as pd
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import os
-from dotenv import load_dotenv
-import json
-
-# Load environment variables
-load_dotenv()
-
-# Read the service account JSON from environment variable
-GOOGLE_SERVICE_ACCOUNT_JSON = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
 
 # Google Sheets configuration
 SHEET_NAME = "Decisiondata"
 
 # Connect to Google Sheets
-
-# Set up the connection to Google Sheets
 def connect_to_google_sheet():
-    # Ensure the credentials are stored as a JSON string in your environment variable
-    credentials_json = os.getenv("GOOGLE_SHEET_CREDENTIALS_JSON")
-    
-    # Convert the JSON string into a dictionary
-    creds_dict = json.loads(credentials_json)
-    
-    # Use the credentials dictionary
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
-    
+    # Load credentials from Streamlit secrets
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(
+        st.secrets["google_service_account"],
+        scope=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    )
     # Authorize with gspread
     client = gspread.authorize(creds)
-    
     # Open the sheet by name
-    return client.open("Decisiondata").sheet1 
-
+    return client.open(SHEET_NAME).sheet1
 
 # Load feedback data
 def load_feedback(sheet):
@@ -44,20 +27,20 @@ def load_feedback(sheet):
 def save_feedback(sheet, comments, rating):
     sheet.append_row([comments, rating])
 
-# Connect to the sheet
-sheet = connect_to_google_sheet()
-
-# Load existing feedback
-try:
-    feedback_data = load_feedback(sheet)
-except Exception:
-    feedback_data = pd.DataFrame(columns=["Comments", "Rating"])
-
 # Streamlit app
 st.set_page_config(page_title="Feedback App")
 
 st.title("Team Member Feedback")
 st.write("Provide your anonymous feedback on whether the former team member should rejoin the team.")
+
+# Connect to the sheet
+try:
+    sheet = connect_to_google_sheet()
+    # Load existing feedback
+    feedback_data = load_feedback(sheet)
+except Exception:
+    st.error("Unable to connect to Google Sheets. Please check your configuration.")
+    feedback_data = pd.DataFrame(columns=["Comments", "Rating"])
 
 # Feedback form
 with st.form("feedback_form"):
@@ -67,9 +50,12 @@ with st.form("feedback_form"):
     submitted = st.form_submit_button("Submit Feedback")
     
     if submitted:
-        save_feedback(sheet, comments, rating)
-        st.success("Your feedback has been recorded. Thank you!")
-        st.experimental_rerun()
+        try:
+            save_feedback(sheet, comments, rating)
+            st.success("Your feedback has been recorded. Thank you!")
+            st.experimental_rerun()
+        except Exception:
+            st.error("Failed to save feedback. Please try again later.")
 
 # Display feedback summary
 if not feedback_data.empty:
@@ -77,5 +63,3 @@ if not feedback_data.empty:
     st.bar_chart(feedback_data["Rating"].value_counts())
     st.write("Detailed Feedback:")
     st.dataframe(feedback_data)
-
-
