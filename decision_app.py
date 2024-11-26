@@ -78,21 +78,30 @@ def create_rating_chart(feedback_data):
         # Define ratings in desired order (negative to positive)
         ordered_ratings = ["Hell No", "No", "I Don't Care", "Sure", "Definitely"]
         
-        # Create rating counts with ordered options
-        rating_counts = pd.Series(0, index=ordered_ratings)
-        actual_counts = feedback_data["Rating"].value_counts()
-        rating_counts.update(actual_counts)
+        # Convert Rating to categorical type with specified order
+        feedback_data['Rating'] = pd.Categorical(
+            feedback_data['Rating'], 
+            categories=ordered_ratings,
+            ordered=True
+        )
         
-        # Create the chart with ordered data
+        # Calculate value counts with ordered categories
+        counts = feedback_data['Rating'].value_counts()
+        
+        # Reindex to ensure all categories are present
+        counts = counts.reindex(ordered_ratings, fill_value=0)
+        
+        # Create DataFrame for chart
         chart_data = pd.DataFrame({
-            "Count": rating_counts.values
-        }, index=ordered_ratings)
+            'Count': counts
+        })
         
+        # Plot the chart
         st.bar_chart(chart_data)
         
     except Exception as e:
         st.error(f"Error creating chart: {str(e)}")
-
+        
 def main():
     st.set_page_config(page_title="Team Member Feedback", page_icon="📋")
     
