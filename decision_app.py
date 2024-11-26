@@ -32,14 +32,14 @@ def connect_to_google_sheet():
 def load_feedback(sheet):
     """Load existing feedback from the sheet."""
     if sheet is None:
-        return pd.DataFrame(columns=["Comments", "Rating"])
+        return pd.DataFrame(columns=["Timestamp", "Comments", "Rating"])
     
     try:
         data = sheet.get_all_records()
         return pd.DataFrame(data)
     except Exception as e:
         st.error(f"Failed to load feedback: {str(e)}")
-        return pd.DataFrame(columns=["Comments", "Rating"])
+        return pd.DataFrame(columns=["Timestamp", "Comments", "Rating"])
 
 def save_feedback(sheet, comments, rating):
     """Save new feedback to the sheet."""
@@ -48,6 +48,28 @@ def save_feedback(sheet, comments, rating):
     
     timestamp = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
     sheet.append_row([timestamp, comments, rating])
+
+def create_rating_chart(feedback_data):
+    """Create a formatted bar chart for ratings."""
+    if feedback_data.empty:
+        return
+    
+    # Create rating counts with all possible options to ensure consistent order
+    all_ratings = ["Hell No", "No", "I Don't Care", "Sure", "Definitely"]
+    rating_counts = pd.Series(0, index=all_ratings)
+    actual_counts = feedback_data["Rating"].value_counts()
+    rating_counts.update(actual_counts)
+    
+    # Create the chart with a custom color scheme
+    chart_data = pd.DataFrame({
+        "Rating": rating_counts.index,
+        "Count": rating_counts.values
+    })
+    
+    return st.bar_chart(
+        chart_data.set_index("Rating"),
+        use_container_width=True
+    )
 
 def main():
     st.set_page_config(page_title="Team Member Feedback", page_icon="📋")
@@ -81,8 +103,8 @@ def main():
             try:
                 save_feedback(sheet, comments, rating)
                 st.success("Thank you! Your feedback has been recorded.")
-                # Use rerun to refresh the page and show updated data
-                st.experimental_rerun()
+                # Use rerun instead of experimental_rerun
+                st.rerun()
             except Exception as e:
                 st.error(f"Failed to save feedback: {str(e)}")
     
@@ -90,9 +112,8 @@ def main():
     if not feedback_data.empty:
         st.write("### 📊 Feedback Summary")
         
-        # Create a bar chart of ratings
-        rating_counts = feedback_data["Rating"].value_counts()
-        st.bar_chart(rating_counts)
+        # Create and display the rating chart
+        create_rating_chart(feedback_data)
         
         # Display statistics
         col1, col2 = st.columns(2)
@@ -100,12 +121,21 @@ def main():
             st.metric("Total Responses", len(feedback_data))
         with col2:
             positive_responses = len(feedback_data[feedback_data["Rating"].isin(["Sure", "Definitely"])])
-            st.metric("Positive Responses", f"{positive_responses} ({(positive_responses/len(feedback_data)*100):.1f}%)")
+            if len(feedback_data) > 0:
+                positive_percentage = (positive_responses/len(feedback_data)*100)
+            else:
+                positive_percentage = 0
+            st.metric("Positive Responses", f"{positive_responses} ({positive_percentage:.1f}%)")
         
         # Display detailed feedback
         st.write("### 📝 Detailed Feedback")
+        if "Timestamp" in feedback_data.columns:
+            display_df = feedback_data.sort_values(by="Timestamp", ascending=False)
+        else:
+            display_df = feedback_data
+            
         st.dataframe(
-            feedback_data.sort_values(by="Timestamp", ascending=False),
+            display_df,
             use_container_width=True
         )
 
