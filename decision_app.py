@@ -25,7 +25,7 @@ def connect_to_google_sheet():
         sheet = client.open(SHEET_NAME).sheet1
         
         # Initialize the sheet with headers if it's empty
-        if sheet.row_count <= 1:  # Only header row or empty
+        if sheet.row_count <= 1:
             sheet.append_row(["Timestamp", "Comments", "Rating"])
             
         return sheet
@@ -41,9 +41,6 @@ def load_feedback(sheet):
     try:
         data = sheet.get_all_records()
         df = pd.DataFrame(data)
-        
-        # Debug info
-        st.write("Debug - DataFrame Columns:", df.columns.tolist())
         
         # Ensure required columns exist
         required_columns = ["Timestamp", "Comments", "Rating"]
@@ -65,7 +62,7 @@ def save_feedback(sheet, comments, rating):
     sheet.append_row([timestamp, comments, rating])
 
 def create_rating_chart(feedback_data):
-    """Create a formatted bar chart for ratings."""
+    """Create a formatted bar chart for ratings in specified order."""
     try:
         if feedback_data.empty or "Rating" not in feedback_data.columns:
             st.warning("No rating data available for visualization")
@@ -78,22 +75,21 @@ def create_rating_chart(feedback_data):
             st.warning("No valid ratings found")
             return
         
-        # Create rating counts with all possible options
-        all_ratings = ["Hell No", "No", "I Don't Care", "Sure", "Definitely"]
-        rating_counts = pd.Series(0, index=all_ratings)
+        # Define ratings in desired order (negative to positive)
+        ordered_ratings = ["Hell No", "No", "I Don't Care", "Sure", "Definitely"]
+        
+        # Create rating counts with ordered options
+        rating_counts = pd.Series(0, index=ordered_ratings)
         actual_counts = feedback_data["Rating"].value_counts()
         rating_counts.update(actual_counts)
         
-        # Create the chart
+        # Create the chart with ordered data
         chart_data = pd.DataFrame({
-            "Rating": rating_counts.index,
             "Count": rating_counts.values
-        })
+        }, index=ordered_ratings)
         
-        st.bar_chart(
-            chart_data.set_index("Rating"),
-            use_container_width=True
-        )
+        st.bar_chart(chart_data)
+        
     except Exception as e:
         st.error(f"Error creating chart: {str(e)}")
 
