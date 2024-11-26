@@ -16,7 +16,6 @@ SCOPE = [
 def connect_to_google_sheet():
     """Connect to Google Sheets using service account credentials."""
     try:
-        # Load credentials directly from streamlit secrets
         credentials = service_account.Credentials.from_service_account_info(
             st.secrets["google_service_account"],
             scopes=SCOPE
@@ -24,6 +23,11 @@ def connect_to_google_sheet():
         
         client = gspread.authorize(credentials)
         sheet = client.open(SHEET_NAME).sheet1
+        
+        # Initialize the sheet with headers if it's empty
+        if sheet.row_count <= 1:  # Only header row or empty
+            sheet.append_row(["Timestamp", "Comments", "Rating"])
+            
         return sheet
     except Exception as e:
         st.error(f"Failed to connect to Google Sheets: {str(e)}")
@@ -36,7 +40,18 @@ def load_feedback(sheet):
     
     try:
         data = sheet.get_all_records()
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        
+        # Debug info
+        st.write("Debug - DataFrame Columns:", df.columns.tolist())
+        
+        # Ensure required columns exist
+        required_columns = ["Timestamp", "Comments", "Rating"]
+        for col in required_columns:
+            if col not in df.columns:
+                df[col] = ""
+                
+        return df
     except Exception as e:
         st.error(f"Failed to load feedback: {str(e)}")
         return pd.DataFrame(columns=["Timestamp", "Comments", "Rating"])
@@ -51,25 +66,36 @@ def save_feedback(sheet, comments, rating):
 
 def create_rating_chart(feedback_data):
     """Create a formatted bar chart for ratings."""
-    if feedback_data.empty:
-        return
-    
-    # Create rating counts with all possible options to ensure consistent order
-    all_ratings = ["Hell No", "No", "I Don't Care", "Sure", "Definitely"]
-    rating_counts = pd.Series(0, index=all_ratings)
-    actual_counts = feedback_data["Rating"].value_counts()
-    rating_counts.update(actual_counts)
-    
-    # Create the chart with a custom color scheme
-    chart_data = pd.DataFrame({
-        "Rating": rating_counts.index,
-        "Count": rating_counts.values
-    })
-    
-    return st.bar_chart(
-        chart_data.set_index("Rating"),
-        use_container_width=True
-    )
+    try:
+        if feedback_data.empty or "Rating" not in feedback_data.columns:
+            st.warning("No rating data available for visualization")
+            return
+        
+        # Remove any empty ratings
+        feedback_data = feedback_data[feedback_data["Rating"].notna()]
+        
+        if feedback_data.empty:
+            st.warning("No valid ratings found")
+            return
+        
+        # Create rating counts with all possible options
+        all_ratings = ["Hell No", "No", "I Don't Care", "Sure", "Definitely"]
+        rating_counts = pd.Series(0, index=all_ratings)
+        actual_counts = feedback_data["Rating"].value_counts()
+        rating_counts.update(actual_counts)
+        
+        # Create the chart
+        chart_data = pd.DataFrame({
+            "Rating": rating_counts.index,
+            "Count": rating_counts.values
+        })
+        
+        st.bar_chart(
+            chart_data.set_index("Rating"),
+            use_container_width=True
+        )
+    except Exception as e:
+        st.error(f"Error creating chart: {str(e)}")
 
 def main():
     st.set_page_config(page_title="Team Member Feedback", page_icon="📋")
@@ -103,7 +129,6 @@ def main():
             try:
                 save_feedback(sheet, comments, rating)
                 st.success("Thank you! Your feedback has been recorded.")
-                # Use rerun instead of experimental_rerun
                 st.rerun()
             except Exception as e:
                 st.error(f"Failed to save feedback: {str(e)}")
@@ -120,22 +145,18 @@ def main():
         with col1:
             st.metric("Total Responses", len(feedback_data))
         with col2:
-            positive_responses = len(feedback_data[feedback_data["Rating"].isin(["Sure", "Definitely"])])
-            if len(feedback_data) > 0:
-                positive_percentage = (positive_responses/len(feedback_data)*100)
-            else:
-                positive_percentage = 0
-            st.metric("Positive Responses", f"{positive_responses} ({positive_percentage:.1f}%)")
+            if "Rating" in feedback_data.columns:
+                positive_responses = len(feedback_data[feedback_data["Rating"].isin(["Sure", "Definitely"])])
+                if len(feedback_data) > 0:
+                    positive_percentage = (positive_responses/len(feedback_data)*100)
+                else:
+                    positive_percentage = 0
+                st.metric("Positive Responses", f"{positive_responses} ({positive_percentage:.1f}%)")
         
         # Display detailed feedback
         st.write("### 📝 Detailed Feedback")
-        if "Timestamp" in feedback_data.columns:
-            display_df = feedback_data.sort_values(by="Timestamp", ascending=False)
-        else:
-            display_df = feedback_data
-            
         st.dataframe(
-            display_df,
+            feedback_data,
             use_container_width=True
         )
 
