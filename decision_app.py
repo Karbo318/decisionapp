@@ -101,7 +101,7 @@ def main():
     with st.form("feedback_form", clear_on_submit=True):
         comments = st.text_area(
             "Comments",
-            placeholder="Write optional comments here...",
+            placeholder="Write optional comments here. They are anonymous but will be visible to others.",
             help="Your feedback will be anonymous"
         )
         
