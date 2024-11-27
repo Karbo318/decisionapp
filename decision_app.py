@@ -86,7 +86,7 @@ def create_rating_chart(feedback_data):
 def main():
     st.set_page_config(page_title="Team Sexy Decision Portal", page_icon="📋")
     
-    st.title("💃🔥🎵 Team Sexy Decision Portal")
+    st.title("💃🔥 Team Sexy Decision Portal")
     st.write("Sarah would like to rejoin the team. Your sexy feedback here will be used to \
              make a sexy collective decision about whether or not to let her. It's anonymous. So be honest, but preferably kind. \
              Kindness is sexy.")
