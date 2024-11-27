@@ -70,7 +70,7 @@ def create_rating_chart(feedback_data):
         
         # Define ratings in desired order (negative to positive)
         ordered_ratings = pd.CategoricalDtype(
-            categories=["F**k No", "No", "Don't Care", "Uhhhh....Sure", "Most Definitely"],
+            categories=["Oh Hell No!", "Nah", "I Really Don't Care", "Yeah! Sure!", "It Would Be My Dream Come True!"],
             ordered=True
         )
         
