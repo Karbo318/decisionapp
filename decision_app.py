@@ -86,7 +86,7 @@ def create_rating_chart(feedback_data):
 def main():
     st.set_page_config(page_title="Team Sexy Decision Portal", page_icon="📋")
     
-    st.title("🤝 Team Sexy Feedback")
+    st.title("💃🔥🎵 Team Sexy Decision Portal")
     st.write("Sarah would like to rejoin the team. Your sexy feedback here will be used to \
              make a sexy collective decision about whether or not to let her. It's anonymous. So be honest, but preferably kind. \
              Kindness is sexy.")
@@ -101,12 +101,12 @@ def main():
     with st.form("feedback_form", clear_on_submit=True):
         comments = st.text_area(
             "Comments",
-            placeholder="Write any comments here. This is optional.",
+            placeholder="Write optional comments here...",
             help="Your feedback will be anonymous"
         )
         
         rating = st.radio(
-            "How do you feel about Sarah returning?",
+            "Are you cool with Sarah returning?",
             options=["Oh Hell No!", "Nah", "I Really Don't Care", "Yeah! Sure!", "My Dream Come True!"],
             horizontal=True
         )
@@ -134,7 +134,7 @@ def main():
             st.metric("Total Responses", len(feedback_data))
         with col2:
             if "Rating" in feedback_data.columns:
-                positive_responses = len(feedback_data[feedback_data["Rating"].isin(["Yeah! Sure!", "It Would Be My Dream Come True!"])])
+                positive_responses = len(feedback_data[feedback_data["Rating"].isin(["Yeah! Sure!", "My Dream Come True!"])])
                 if len(feedback_data) > 0:
                     positive_percentage = (positive_responses/len(feedback_data)*100)
                 else:
