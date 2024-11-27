@@ -70,7 +70,7 @@ def create_rating_chart(feedback_data):
         
         # Define ratings in desired order (negative to positive)
         ordered_ratings = pd.CategoricalDtype(
-            categories=["Oh Hell No!", "Nah", "I Really Don't Care", "Yeah! Sure!", "It Would Be My Dream Come True!"],
+            categories=["Oh Hell No!", "Nah", "I Really Don't Care", "Yeah! Sure!", "My Dream Come True!"],
             ordered=True
         )
         
@@ -107,7 +107,7 @@ def main():
         
         rating = st.radio(
             "How do you feel about Sarah returning?",
-            options=["Oh Hell No!", "Nah", "I Really Don't Care", "Yeah! Sure!", "It Would Be My Dream Come True!"],
+            options=["Oh Hell No!", "Nah", "I Really Don't Care", "Yeah! Sure!", "My Dream Come True!"],
             horizontal=True
         )
         
