@@ -70,7 +70,7 @@ def create_rating_chart(feedback_data):
         
         # Define ratings in desired order (negative to positive)
         ordered_ratings = pd.CategoricalDtype(
-            categories=["Hell No", "No", "I Don't Care", "Sure", "Definitely"],
+            categories=["F**k No", "No", "Don't Care", "Uhhhh....Sure", "Most Definitely"],
             ordered=True
         )
         
@@ -84,10 +84,12 @@ def create_rating_chart(feedback_data):
         st.error(f"Error creating chart: {str(e)}")
 
 def main():
-    st.set_page_config(page_title="Team Member Feedback", page_icon="📋")
+    st.set_page_config(page_title="Team Sexy Decision Portal", page_icon="📋")
     
-    st.title("🤝 Team Member Feedback")
-    st.write("Provide your anonymous feedback on whether the former team member should rejoin the team.")
+    st.title("🤝 Team Sexy Feedback")
+    st.write("Sarah would like to rejoin the team. Your sexy feedback here will be used to \
+             make a sexy collective decision about whether or not to let her. It's anonymous. So be honest, but preferably kind. \
+             Kindness is sexy.")
     
     # Connect to Google Sheets
     sheet = connect_to_google_sheet()
@@ -99,13 +101,13 @@ def main():
     with st.form("feedback_form", clear_on_submit=True):
         comments = st.text_area(
             "Comments",
-            placeholder="Write your feedback here...",
+            placeholder="Write any comments here. This is optional.",
             help="Your feedback will be anonymous"
         )
         
         rating = st.radio(
-            "How do you feel about this team member returning?",
-            options=["Hell No", "No", "I Don't Care", "Sure", "Definitely"],
+            "How do you feel about Sarah returning?",
+            options=["Oh Hell No!", "Nah", "I Really Don't Care", "Yeah! Sure!", "It Would Be My Dream Come True!"],
             horizontal=True
         )
         
@@ -132,7 +134,7 @@ def main():
             st.metric("Total Responses", len(feedback_data))
         with col2:
             if "Rating" in feedback_data.columns:
-                positive_responses = len(feedback_data[feedback_data["Rating"].isin(["Sure", "Definitely"])])
+                positive_responses = len(feedback_data[feedback_data["Rating"].isin(["Yeah! Sure!", "It Would Be My Dream Come True!"])])
                 if len(feedback_data) > 0:
                     positive_percentage = (positive_responses/len(feedback_data)*100)
                 else:
