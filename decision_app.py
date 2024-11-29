@@ -88,7 +88,7 @@ def main():
     
     st.title("💃🔥Team Sexy Decision Portal💃🔥")
     st.write("Sarah would like to rejoin the team. Your sexy feedback here will be used to \
-             make a sexy collective decision about whether or not to let her. It's anonymous. So be honest, but preferably kind if you \
+             help Agustin make a sexy decision about whether or not to let her. It's anonymous. So be honest, but preferably kind if you \
              write comments. Kindness is sexy.")
     
     # Connect to Google Sheets
